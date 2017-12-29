@@ -1,0 +1,23 @@
+#
+# Oracle R Enterprise Book - by Brendan Tierney
+#    Published by : McGraw-Hill / Oracle Press
+#
+# Chapter 14 - ORE for the Oracle DBA
+
+
+— Grant the database privileges necessary to use ORE to a new/existing Oracle schema
+GRANT create session,      create table,      create view,      create procedure,      create mining modelTO  ORE_USER2;— Grant the RQADMIN privilege to the ORE_USER2 schema
+GRANT rqadmin TO ORE_USER2;# Install the e1071 package 
+#   Start R before running the following command
+install.packages("e1071") 
+
+
+# Install the package from the downloaded file of the R package
+ORE CMD INSTALL e1071_1.6-6.tar.gz
+
+install.packages("C:/app/ORE_Install/new/e1071_1.6-7.zip")
+
+
+> # Using Embedded R Execution check that package is installed on Database server > ore.doEval(function() packageVersion("e1071")) > # List all the packages installed on the Database server > ore.doEval(function() row.names(installed.packages())) # Load the e1071 package and test #   the following assumes that you are already connected to your ORE schema #     and a table or view exists called ANALYTIC_RECORD (see Chapter 7) library(e1071) df<-ore.pull(ANALYTIC_RECORD) naiveBayes(AFFINITY_CARD ~., df) # Test the embedded execution of the e1071 package nbmod <- ore.tableApply (    ore.push(iris),   function(dat) {      library(e1071)      dat$Species <- as.factor(dat$Species)      naiveBayes(Species ~ ., dat)   })# Get the current environment variable settings s <- options() s # Changing environment variable settings options("width") options(width = 100) options("digits") options(digits = 5)# Checking the current settings of the ORE environment variables. options("ore.envAsEmptyenv") options("ore.na.extract") options("ore.parallel") options("ore.sep") options("ore.trace") options("ore.warn.order")  # Changing the ORE enviroment variable values. # Change the column separatoroptions("ore.sep") options("ore.sep" = ":") options("ore.sep") options("ore.sep" = "|")  # Change the ORE warning messages leveloptions("ore.warn.order") options("ore.warn.order" = FALSE) options("ore.warn.order") options("ore.warn.order" = TRUE)# Check the current value for ore.parallel. The default is Null or no parallel options("ore.parallel") # set the ore.paralel variable to 4 options("ore.parallel" = 4) # set the ore.parallel variable to the database default options("ore.parallel" = NULL)# Uninstall ORE from the OS
+./server.sh --uninstall./server.sh -u./server.sh -u --keep./server.sh --uninstall --keep# Full uninstall from the OS
+./server.sh --uninstall --full./server.sh -u --full# Uninstall the ORE Client packages # # Uninstall the ORE core packages rremove.packages("ORE") remove.packages("OREbase") remove.packages("OREcommon") remove.packages("OREdm") remove.packages("OREeda") remove.packages("OREembed") remove.packages("OREgraphics") remove.packages("OREmodels") remove.packages("OREpredict") remove.packages("OREstats") remove.packages("ORExml") # Uninstall the ORE supporting packages remove.packages("arules") remove.packages("Cairo") remove.packages("DBI") remove.packages("png") remove.packages("randomForest") remove.packages("ROracle") remove.packages("statmod")

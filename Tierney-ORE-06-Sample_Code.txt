@@ -1,0 +1,276 @@
+#
+# Oracle R Enterprise Book - by Brendan Tierney
+#    Published by : McGraw-Hill / Oracle Press
+#
+# Chapter 6 - Exploring your Data
+#
+
+# EDA - Examples 
+# 
+# Use the CUSTOMERS_USA data. It is in our schema in the Database 
+full_dataset <- CUSTOMERS_USA 
+names(full_dataset) 
+
+# Generate the summary statistics 
+?ore.summary()
+ore.summary(full_dataset, var="CUST_YEAR_OF_BIRTH")
+ore.summary(full_dataset, var="CUST_YEAR_OF_BIRTH", stats=c("n", "nmiss", "min", "max", "range", "std")) 
+
+ore.summary(full_dataset, class="CUST_GENDER", var="CUST_YEAR_OF_BIRTH")   
+
+ore.summary(full_dataset, class=c("CUST_CITY", "CUST_GENDER"), 
+            var="CUST_YEAR_OF_BIRTH", ways=2) 
+
+?ore.univariate
+ore.univariate(full_dataset, var="CUST_YEAR_OF_BIRTH") 
+
+# Use the CUSTOMERS_USA data. It is in our schema in the Database
+full_dataset <- CUSTOMERS_USA
+# add an index to the data frame
+row.names(full_dataset) <- full_dataset$CUST_ID
+# Remap the following to numeric data type
+full_dataset$CUST_POSTAL_CODE <- as.numeric(full_dataset$CUST_POSTAL_CODE)
+full_dataset$CUST_CITY_ID <- as.numeric(full_dataset$CUST_CITY_ID)
+
+?ore.corr
+# Correlation analysis using Pearson
+ore.corr(full_dataset, var="CUST_POSTAL_CODE, CUST_CITY_ID")
+# Correlation analysis using Spearman
+ore.corr(full_dataset, var="CUST_POSTAL_CODE, CUST_CITY_ID", stats="spearman")
+
+
+# Use the CUSTOMERS_USA data. It is in our schema in the Database
+full_dataset <- CUSTOMERS_USA
+# add an index to the data frame
+row.names(full_dataset) <- full_dataset$CUST_ID
+# Crosstab example
+ore.crosstab(~CUST_GENDER, data=full_dataset) 
+
+full_dataset$AGE <- as.numeric(format(Sys.time(), "%Y")) - full_dataset$CUST_YEAR_OF_BIRTH
+
+# Analyze Age by Customer Gender
+ore.crosstab(AGE~CUST_GENDER, data=full_dataset)
+
+# Analyze Age by Customer Gender and Customer City by Customer Gender
+ore.crosstab(AGE+CUST_CITY~CUST_GENDER, data=full_dataset)
+
+# Order the data in ascending Frequency count order
+ore.crosstab(AGE+CUST_CITY~CUST_GENDER | FREQ, data=full_dataset)
+
+# Order the data in descending Frequency count order
+ore.crosstab(AGE+CUST_CITY~CUST_GENDER | -FREQ, data=full_dataset)
+
+# EDA - ore.rank 
+# 
+# Use the CUSTOMERS_USA data. It is in our schema in the Database 
+full_dataset <- CUSTOMERS_USA 
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Basic use of ore.rank
+head(ore.rank(full_dataset, var="CUST_CREDIT_LIMIT=Rank_CL"),50) 
+# Rank based on grouping on CUST_CITY attribute 
+head(ore.rank(full_dataset, var="CUST_CREDIT_LIMIT=Rank_CL", group.by="CUST_CITY", ties="dense"),50) 
+# Percentage Rank on grouping 
+head(ore.rank(full_dataset, var="CUST_CREDIT_LIMIT=Rank_CL", group.by="CUST_CITY", percent=TRUE, ties="dense"),50)
+# Create a Sorted dataset of the Ranked Data 
+ranked_data <- ore.rank(full_dataset, var="CUST_CREDIT_LIMIT=Rank_CL", 
+                        group.by="CUST_CITY", percent=TRUE, ties="dense") 
+sorted_ranked_data <- ore.sort(ranked_data, by=c("CUST_CITY", "Rank_CL")) 
+head(sorted_ranked_data,30)
+
+
+# Use the CUSTOMERS_V data. Is is in our schema in the Database 
+# Random Sampling Example
+#
+full_dataset <- CUSTOMERS_V
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Check the class of the object. It should be an ore.frame pointing 
+#   to the object in the Database 
+class(full_dataset) 
+# Set the sample size SampleSize <- 1000 
+SampleSize <- 1000 
+# Create the sample data set 
+sample_dataset <- full_dataset[sample(nrow(full_dataset), SampleSize), , drop=FALSE] 
+# Check to class of the sample data set. As an ore.frame object 
+#   the sample data set is located in the Database. No data movement 
+#   has occured in creating it. 
+class(sample_dataset) 
+# Check the number of rows in the sample data set  
+nrow(sample_dataset) 
+
+# Stratified Sampling example
+# 
+full_dataset <- CUSTOMERS_V 
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Check the class of the object. It should be an ore.frame pointing 
+#   to the object in the Database 
+class(full_dataset) 
+# Set the sample size 
+SampleSize <- 1000 
+# Calculate the total number of records in the full data set
+NRows_Dataset = nrow(full_dataset) 
+# Create the Stratified data set based on using the CUST_GENER attribute 
+stratified_sample <- do.call(rbind,
+                             lapply(split(full_dataset, full_dataset$CUST_GENDER), 
+                                    function(y) {
+                                      NumRows <- nrow(y) 
+                                      y[sample(NumRows, SampleSize*NumRows/NRows_Dataset), , drop=FALSE] 
+                                    })) 
+class(stratified_sample) 
+nrow(stratified_sample) 
+# Distribution of values from the Stratified Sample data set
+table(stratified_sample$CUST_GENDER)/nrow(stratified_sample)
+# Distribution of values from the original data set
+table(full_dataset$CUST_GENDER) /nrow(full_dataset)
+
+
+
+# Split Sampling 
+# 
+full_dataset <- CUSTOMERS_V 
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Check the class of the object. It should be an ore.frame pointing 
+#   to the object in the Database 
+class(full_dataset) 
+# Get number of records in full data set 
+nrow(full_dataset) 
+# Set the sample size to be 40% of the full data set 
+#    The Testing data set will have 40% of the records 
+#    The Training data set will have 60% of the records 
+SampleSize <- nrow(full_dataset)*0.40 
+# Create an index of records for the Sample 
+Index_Sample <- sample(1:nrow(full_dataset), SampleSize) 
+group <- as.integer(1:nrow(full_dataset) %in% Index_Sample) 
+# Create a partitioned data set of records not selected to be in sample 
+Training_Sample <- full_dataset[group==FALSE,] 
+# Get the number of records in the Training Sample data set 
+nrow(Training_Sample) 
+# Create a partitioned data set of records who were selected to be in the sample 
+Testing_Sample <- full_dataset[group==TRUE,] 
+# Get the number of records in the Testing Sample data set 
+nrow(Testing_Sample)
+
+
+
+# Cluster Sampling 
+# 
+full_dataset <- CUSTOMERS_V 
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Set the sample size 
+SampleSize <- 1000 
+# Create the Clustered subset that will contain 3 randomly selected countries 
+Cluster_SubSet <- do.call(rbind, 
+                          sample(split(full_dataset, full_dataset$COUNTRY_ID), 3)) 
+nrow(Cluster_SubSet) 
+# Create the final Cluster Sample data set based on the Sample Size value 
+Cluster_Sample <- Cluster_SubSet[sample(nrow(Cluster_SubSet), SampleSize), , drop=FALSE] 
+# Check the number of records produced and the number of distict split values 
+nrow(Cluster_Sample) 
+unique(Cluster_Sample$COUNTRY_ID)
+
+
+# Systematic Sampling 
+# 
+full_dataset <- CUSTOMERS_V 
+# add an index to the data frame 
+row.names(full_dataset) <- full_dataset$CUST_ID 
+# Set the Starting position 
+StartPosition <- 1000 
+# Set the Interval setting 
+IntervalSetting <- 20 
+# Create the sample data set based on the Starting Position and the Interval setting 
+sample_dataset <- full_dataset[seq(StartPosition, nrow(full_dataset), by = IntervalSetting), , drop=FALSE] 
+nrow(sample_dataset)
+
+# Aggregating Data 
+AggData <- aggregate(full_dataset$CUST_ID, 
+                     by = list(COUNTRY_ID = full_dataset$COUNTRY_ID),
+                     FUN = length) 
+AggData 
+
+# sort the Aggregated Data in ascending order 
+ore.sort(data = AggData, by = "x") 
+# sort the Aggregated Data in descending order 
+ore.sort(data = AggData, by = "x", reverse = TRUE)
+
+AggData2 <- aggregate(full_dataset$CUST_ID,
+                      by = list(COUNTRY_ID = full_dataset$COUNTRY_ID,
+                                CUST_GENDER = full_dataset$CUST_GENDER),
+                      FUN = length) 
+AggData2 
+# sort the Aggregated Data in by CUST_GENDER and then the count value 
+ore.sort(data = AggData2, by = c("CUST_GENDER", "x"))
+
+# Rolling calculations 
+x <- ore.rollmean(full_dataset$CUST_CREDIT_LIMIT, 5) 
+head(x) 
+
+# Adding Derived Attributes 
+products <- PRODUCTS_V 
+class(products) 
+# Add the following Tax related values to the products ORE data frame 
+products$TAX <- 0.21 
+products$TAX_AMT <- products$PROD_LIST_PRICE * products$TAX 
+products$PROD_TOTAL_PRICE <- products$PROD_LIST_PRICE + products$TAX_AMT 
+# List the attributes and display the first 6 records. 
+names(products) 
+head(products) 
+
+products <- PRODUCTS_V 
+# Adding Derived Attributes using the Transform function 
+products <- transform(PRODUCTS_V,
+                      TAX = 0.21,
+                      TAX_AMT = PROD_LIST_PRICE * 0.21,
+                      PROD_TOTAL_PRICE = (PROD_LIST_PRICE * 0.21) + PROD_LIST_PRICE) 
+# List the attributes and display the first 6 records. 
+names(products) 
+head(products)
+
+# Binning - Bin Age into categories 
+customers <- CUSTOMERS_V 
+# Determine the current year in YYYY format and convert to numeric data type 
+current_year <- as.numeric(format(Sys.time(), "%Y")) 
+# Function to caluclate the age difference based on the years.  
+age_diff <- function(x,y) {
+  x-y             } 
+# Add the new attribute with the binned values 
+customers <- transform(customers,
+                       AGE_BIN = ifelse(age_diff(current_year, CUST_YEAR_OF_BIRTH) >= 65, 'Pensioner', 
+                                        ifelse(age_diff(current_year, CUST_YEAR_OF_BIRTH) >= 55, 'Pension Planner', 
+                                               ifelse(age_diff(current_year, CUST_YEAR_OF_BIRTH) >= 19, 'Adult', 'Too Young'
+                                               ))))  
+head(customers, 20) 
+
+# Combining Data 
+# create a subset of the COUNTRIES_V data to primary key and one attribute 
+country_regions <- COUNTRIES_V[, c("COUNTRY_ID","COUNTRY_REGION")] 
+# Merge the 2 data sets. This will add the COUNTRY_REGION attribute  
+#  to our countries data set 
+customers <- merge(customers, country_regions, by.x="COUNTRY_ID", by.y="COUNTRY_ID") 
+head(customers)
+
+# Sorting Data 
+?ore.sort 
+# Sort the data set by COUNTRY_REGION (in ascending order by default) 
+ore.sort(data = customers, by = "COUNTRY_REGION")
+
+# Sort the data by COUNTRY_REGION in descending order 
+ore.sort(data = customers, by = "COUNTRY_REGION", reverse=TRUE) 
+
+# Sort the data set by COUNTRY_REGION and AGE_BIN 
+ore.sort(data = customers, by = c("COUNTRY_REGION","AGE_BIN")) 
+
+# Sort the data by COUNTRY_REGION ascending and by CUST_YEAR_OF_BIRTH in descending order 
+#  You will notices a different way for indicating Descending order. This is to be used 
+#    when sorting your data using a combination of 2 or more attributes. 
+cust_sorted <- ore.sort(data = customers, by = c("COUNTRY_REGION","-CUST_YEAR_OF_BIRTH")) 
+
+# Sorted data is stored in an ORE data frame called 'cust_sorted' 
+#   This allows you to perform additional data manipulations on the data set 
+#  The following displays 3 of the attributes from the sorted data set 
+head(cust_sorted[,c("AGE_BIN","COUNTRY_REGION","CUST_YEAR_OF_BIRTH")], 20) 
+

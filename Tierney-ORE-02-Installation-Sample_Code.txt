@@ -1,0 +1,44 @@
+#
+# Oracle R Enterprise Book - by Brendan Tierney
+#    Published by : McGraw-Hill / Oracle Press
+#
+# Chapter 2 - Sample Code Listing
+#
+
+# Install the Oracle R Enterprise Client Packages 
+#
+# Need to ensure your Client has the correct version of R or Oracle R Distribution 
+#   Start R and then run the following
+
+install.packages("C:/app/ORE_Client_Install/client/ORE_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREbase_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREcommon_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREdm_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREeda_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREembed_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREgraphics_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREmodels_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREpredict_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/OREstats_1.4.1.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/client/ORExml_1.4.1.zip", repos=NULL)  
+
+## Install the ORE Supporting packages
+install.packages("C:/app/ORE_Client_Install/supporting/arules_1.1-3.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/supporting/Cairo_1.5-5.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/supporting/DBI_0.2-7.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/supporting/png_0.1-7.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/supporting/ROracle_1.1-12.zip", repos=NULL) 
+install.packages("C:/app/ORE_Client_Install/supporting/statmod_1.4.20.zip", repos=NULL)
+
+
+# Alternative command line option to install the ORE Client Packages
+R CMD INSTALL C:/app/ORE_Client_Install/client/OREbase_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREcommon_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREdm_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREeda_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREembed_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREgraphics_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREmodels_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREpredict_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/OREstats_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/client/ORExml_1.4.1.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/arules_1.1-3.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/Cairo_1.5-5.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/DBI_0.2-7.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/png_0.1-7.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/Roracle_1.1-12.zipR CMD INSTALL C:/app/ORE_Client_Install/supporting/statmod_1.4.20.zip
+
+
+
+# Verifying the Installation of ORE
+#   Start R and then run the following
+
+# First you need to load the ORE libarylibrary(ORE) # Create an ORE connection to your Oracle Schemaore.connect(user="ore_user", password="ore_user", host="localhost", service_name="PDB12C", port=1521, all=TRUE) # Test that we are connectedore.is.connected() # List the objects that are in the Oracle Schema  -- No objects exist if a new schemaore.ls() # Test embedded R execution. The user will need the RQADMIN database privilege
+ore.doEval(function() .libPaths() )
+# Disconnect from the Databaseore.disconnect()

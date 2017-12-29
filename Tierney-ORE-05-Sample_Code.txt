@@ -1,0 +1,107 @@
+#
+# Oracle R Enterprise Book - by Brendan Tierney
+#    Published by : McGraw-Hill / Oracle Press
+#
+# Chapter 5 - Sample Code Listing
+#
+
+# Search for functions and objects containing ORE
+apropos("^ore") 
+
+# How to get help on an ORE function or packages
+help("OREstats") 
+?OREstats
+
+
+# To list the functions contained in an ORE Package, for example the OREstats package
+ls("package:OREstats") 
+
+# To get the version number of the ORE Package
+packageVersion("ORE")
+ore.doEval(function() packageVersion("ORE"))
+
+# To get the ORE Version number that is installed in the Oracle Database 
+SELECT value 
+FROM   sys.rq_config 
+WHERE  name = 'VERSION';
+
+# Setting some global session options
+options(width = 100)
+options(digits = 5)
+
+geo <- options() 
+geo
+
+# How to set your R session timezone option before opening your ORE connection
+Sys.setenv(TZ = "GMT")
+Sys.setenv(ORA_SDTZ = "GMT")
+
+# What is the current degree of parallelism 
+options("ore.parallel")  
+
+# Set the degree of parallelism to 8 
+options(ore.parallel=8)  
+
+# Check the that the degree of parallelism is set to 8 
+options("ore.parallel")  
+
+# Set the degree of parallelism back to the default for your ORE connection 
+options(ore.parallel=NULL)
+
+# Check the current value of ore.warn.order 
+options("ore.warn.order")  
+
+# Display the first 4 columns for the first 6 records  
+#   from the CUSTOMER_USA table 
+head(CUSTOMERS_USA[,1:4])  
+CUST_ID CUST_FIRST_NAME CUST_LAST_NAME CUST_GENDER 
+1   43228           Abner        Everett           M 
+2   47006           Abner        Everett           M 
+3   12112           Abner        Everett           M 
+4   16581           Abner         Kenney           M 
+5   13895           Abner         Kenney           M 
+6   21006           Abner         Kenney           M 
+Warning messages: 
+  1: ORE object has no unique key - using random order  
+2: ORE object has no unique key - using random order
+
+# Set the ore.warn.order option to FALSE 
+#   to turn off the warning messages 
+options(ore.warn.order=FALSE)  
+
+# Display the details from the CUSTOMER_USA table again 
+#   This time we do not get the warning messages 
+head(CUSTOMERS_USA[,1:4])  
+CUST_ID CUST_FIRST_NAME CUST_LAST_NAME CUST_GENDER 
+1   43228           Abner        Everett           M 
+2   47006           Abner        Everett           M 
+3   12112           Abner        Everett           M 
+4   16581           Abner         Kenney           M 
+5   13895           Abner         Kenney           M 
+6   21006           Abner         Kenney           M
+
+# Set the value ore.warn.order back to TRUE 
+options(ore.warn.order=TRUE)
+
+
+# To run the ORE Demo
+demo(package="ORE")
+library(help="datasets")
+demo("analysis", package = "ORE")     
+
+
+# Useful website for getting more help and support for  ORE
+https://community.oracle.com/community/business_intelligence/data_warehousing
+Oracle R Technologies
+https://blogs.oracle.com/R/
+  Oracle Data Mining
+https://blogs.oracle.com/datamining/
+  Oracle R Technologies
+http://www.oracle.com/technetwork/database/database-technologies/r/r-technologies/overview/index.html
+
+Oracle R Enterprise
+www.oracle.com/technetwork/database/database-technologies/r/r-enterprise/overview/index.html
+
+Oracle Data Mining / Oracle Advanced Analytics
+http://www.oracle.com/technetwork/database/options/advanced-analytics
+

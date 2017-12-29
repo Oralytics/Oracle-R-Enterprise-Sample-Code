@@ -1,0 +1,209 @@
+
+#
+# Oracle R Enterprise Book - by Brendan Tierney
+#    Published by : McGraw-Hill / Oracle Press
+#
+# Chapter 3 - Sample Code Listing
+#
+
+# Connecting to the Oracle Database
+# First you need to load the ORE library
+library(ORE) 
+
+
+# Create an ORE connection to your Oracle Schema
+ore.connect(user="ore_user", password="ore_user", host="localhost", service_name="PDB12C", port=1521, all=TRUE) 
+
+# Connection to an Oracle Database that is using SID
+ore.connect(user="ore_user", password="ore_user", host="localhost", sid="ORCL", port=1521, all=TRUE) 
+
+ore.is.connected()
+
+if (!ore.is.connected())    
+{
+  message("Not currently connected.  Connecting Now")  
+  ore.connect(user="ore_user", password="ore_user", host="localhost",              
+              service_name="PDB12C", port=1521, all=TRUE)  
+} else {
+  message("Already connected") 
+}
+
+# Syncing objects
+?ore.sync()
+ore.disconnect()
+ore.connect(user="ore_user", password="ore_user", host="localhost", service_name="PDB12C", port=1521, all=FALSE) 
+ore.ls()
+ore.sync(table=c("PRODUCTS", "CUSTOMERS")) 
+ore.ls()
+
+ore.sync(schema="SH", table=c("COUNTRIES", "SALES")) 
+
+
+# Using ore.get
+ds<- ore.get("PRODUCTS") 
+class(ds) 
+dim(ds)
+
+ds2<-ore.get("COUNTRIES", "SH")
+
+# create a view like object
+ore.sync(query = c("COUNTRY_COUNT" = "SELECT cc.country_name, count(c.cust_id)
+                   FROM   customers c,
+                   countries cc 
+                   WHERE  c.country_id = cc.country_id
+                   GROUP BY cc.country_name"))
+
+# Using ore.attach and ore.detach
+dim(PRODUCTS)
+head(PRODUCTS, 5) 
+ore.attach("SH")
+ore.detach("SH") 
+ore.detach()
+
+# Using ore.exec to run SQL in the database
+ore.exec("DROP TABLE customers_usa")
+ore.exec("DROP VIEW customers_v") 
+ore.exec("DROP VIEW products_v") 
+ore.exec("DROP VIEW countries_v") 
+ore.exec("DROP VIEW sales_v") 
+ore.exec("CREATE VIEW customers_v AS SELECT * FROM sh.customers") 
+ore.exec("CREATE VIEW products_v AS SELECT * FROM sh.products") 
+ore.exec("CREATE VIEW countries_v AS SELECT * FROM sh.countries") 
+ore.exec("CREATE VIEW sales_v AS SELECT * FROM sh.sales") 
+# create a view for Customers who live in USA 
+ore.exec("CREATE TABLE customers_usa 
+         AS SELECT * FROM customers_v WHERE COUNTRY_ID = 52790") 
+# put the new Customers table in memory 
+ore.exec("ALTER TABLE customers_usa inmemory") 
+ore.ls()
+ore.sync()
+ore.ls()
+
+options(width=100)
+
+# create a local variable ds that points to SALES_V in the database
+ds <- ore.get("SALES_V") 
+# We can verify we are pointing at the object in the database
+class(ds) 
+# How many rows and columns are in the table
+dim(ds)
+# Display the first 6 records from the table
+head(ds)
+summary(ds)  
+
+options(ore.warn.order=FALSE)
+
+# Create a local copy of the SALES_V data
+sales_ds <- ore.pull(SALES_V) 
+class(sales_ds) 
+# Get details of the local data
+dim(sales_ds) 
+
+
+
+ore.exec("ALTER TABLE customers_usa ADD CONSTRAINT cust_usa_pk PRIMARY KEY (cust_id)") 
+usa_ds2<-ore.get("CUSTOMERS_USA")
+
+usa_ds <-ore.get("CUSTOMERS_USA")
+# Check what the unique identifier is for the object. We should get no unique key for our data
+row.names(head(usa_ds))
+# Define and assign the unique key for the data set. In out data set this is CUST_ID
+row.names(usa_ds)<-usa_ds$CUST_ID 
+# Display the first 6 records.  You will not get the unique key message.
+head(usa_ds)
+
+
+cars_ore_ds<-ore.push(mtcars) 
+
+# create a table in the schema
+ore.create(mtcars, "CARS_DATA") 
+ore.ls()
+
+# Drop a table in the schema
+ore.drop("CARS_DATA")
+ore.ls()
+
+# Drop a view in the schema
+ore.drop(view=”SALES_V")
+ore.drop(table="CARS_DATA", view="SALES_V")
+
+# combining ore.drop and ore.create
+if (ore.exists("CARS_DATA")) {
+  message("Updating table in schema.  Dropping and Recreating with new data")
+  ore.drop("CARS_DATA")
+  ore.create(mtcars, "CARS_DATA")
+} else {
+  message("Creating table in your schema. It did not exist")
+  ore.create(mtcars, "CARS_DATA")
+}
+
+?ore.datastore
+?ore.load
+
+# Create and ORE Data store
+ore.save(CARS_DATA, name="ORE_DS", description="Example of ORE Datastore")
+ore.save(cars_ds, name="ORE_DS", append=TRUE)
+ore.save(cars_ds, name="ORE_DS", overwrite=TRUE)
+ore.save(list=c("cars_ds", "iris_ds", "random_values"), name="ORE_DS3", grantable=TRUE)
+
+# Delete one object from the ORE Data Storeore.delete("ORE_DS", list="cars_ds")# Delete multiple objects from the ORE Data Storeore.delete("ORE_DS", list=c("cars_ds", "CARS_DATA")) ore.save(list=ls(), name="ORE_DS2", description="DS for all R Env Data")
+ore.datastore()
+ore.datastoreSummary("ORE_DS2")
+
+
+ore.load("ORE_DS")
+ore.load("ORE_DS2", c("cars_ds", "sales_ds", "usa_ds"))
+
+
+ore.lazyLoad("ORE_DS2")
+ore.lazyLoad("ORE_DS2", c("cars_ds", "sales_ds", "usa_ds"))
+
+
+# set up some data to use to demo Grant and Revoke
+cars_ds <- mtcars
+iris_ds <- iris
+random_values <- sample(seq(100),10)
+ore.delete("ORE_DS3")
+# Create a ORE data store that can be shared with other users.
+ore.save(list=c("cars_ds", "iris_ds", "random_values"), name="ORE_DS3", grantable=TRUE)
+
+# List all the ORE data stores
+ore.datastore(type="all")
+# List all the ORE data stores that can be shared
+ore.datastore(type="grantable")
+
+# Grant the ORE_USER2 database user access to the ORE_DS data store
+ore.grant("ORE_DS3", type="datastore", user="ORE_USER2")
+# Grant all database users access to the ORE_DS data store
+ore.grant("ORE_DS3", type="datastore", user=NULL)
+
+# Create an ORE connection to your Oracle Schema
+ore.connect(user="ore_user2", password="ore_user2", host="localhost", service_name="PDB12C", port=1521, all=TRUE) 
+# list all the ORE data stores I have access to
+ore.datastore(type="all")
+# list the contents of the ORE_DS3 data stores owned by the ORE_USER
+ore.datastoreSummary("ORE_DS3", owner="ORE_USER")
+
+# Load the objects from the ORE_DS3 data store owned by ORE_USER
+ore.load("ORE_DS3", owner="ORE_USER")
+# List the objects
+ore.ls()
+ls()
+
+# Revoke all access to the ORE_DS from all database users
+ore.revoke("ORE_DS3", type="datastore", user=NULL)
+# Revoke access to the ORE_DS datastore from the ORE_USER database user
+ore.revoke("ORE_DS3", type="datastore", user="ORE_USER2")
+
+# Delete the ORE_DS data store
+ore.delete("ORE_DS")
+
+
+# Disconnect from the database
+ore.disconnect()
+
+# SQL query to check for ORE temporary objects in the schema
+SELECT object_name, object_type, last_ddl_time 
+FROM   user_objects 
+WHERE  object_name like 'ORE$%';
+
